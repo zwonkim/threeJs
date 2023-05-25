@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-//주제 : 애니메이션 (three.js clock + getElapsedTime )
+//주제 : 애니메이션 (three.js clock + getElapsedTime)
 export default function example() {
   const canvas = document.querySelector("#three-canvas");
   const renderer = new THREE.WebGL1Renderer({
