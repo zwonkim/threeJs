@@ -1,0 +1,131 @@
+import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import dat from "dat.gui";
+
+// 주제: pointLight
+
+export default function example() {
+  // Renderer
+  const canvas = document.querySelector("#three-canvas");
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: true,
+  });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(window.devicePixelRatio > 1 ? 2 : 1);
+  //그림자 허용
+  renderer.shadowMap.enabled = true;
+  //그림자 스타일
+  //BasicShadowMap 성능이 가장 좋고 픽셀 단위가 도드라지는 그림자를 생성함, 그림자의 모양은 shadow.mapSize를 통해 조절할 수 있음
+  renderer.shadowMap.type = THREE.BasicShadowMap;
+
+  // Scene
+  const scene = new THREE.Scene();
+
+  // Camera
+  const camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
+  );
+  camera.position.y = 1.5;
+  camera.position.z = 4;
+  scene.add(camera);
+
+  // Light
+  //ambientLight 전체적으로 은은하게 깔아주는 조명, 위치 속성 없음(전체적으로 밝히는 것이기 때문에)
+  const ambientLight = new THREE.AmbientLight("white", 0.5);
+  scene.add(ambientLight);
+
+  //directionalLight 태양광
+  const light = new THREE.PointLight("white", 0.5);
+  light.position.y = 3;
+  scene.add(light);
+
+  //그림자 설정
+  light.castShadow = true;
+  //그림자 선명도 조절
+  light.shadow.mapSize.width = 1024;
+  light.shadow.mapSize.height = 1024;
+  //그림자 가장자리에 블러효과를 주고 싶을 때
+  light.shadow.radius = 5;
+  //그림자의 크기 조절
+  light.shadow.camera.near = 1;
+  light.shadow.camera.far = 5;
+
+  const lightHelper = new THREE.PointLightHelper(light);
+  scene.add(lightHelper);
+
+  const lightGui = new dat.GUI();
+  lightGui.add(light.position, "x", -5, 5);
+  lightGui.add(light.position, "y", -5, 5);
+  lightGui.add(light.position, "z", -5, 5);
+
+  // Controls
+  const controls = new OrbitControls(camera, renderer.domElement);
+
+  // Mesh
+  const planeGeometry = new THREE.PlaneGeometry(10, 10);
+  const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
+  const sphereGeometry = new THREE.SphereGeometry(0.7, 16, 16);
+
+  const material1 = new THREE.MeshStandardMaterial({
+    color: "white",
+  });
+  const material2 = new THREE.MeshStandardMaterial({
+    color: "yellow",
+  });
+  const material3 = new THREE.MeshStandardMaterial({
+    color: "blue",
+  });
+
+  const plane = new THREE.Mesh(planeGeometry, material1);
+  const box = new THREE.Mesh(boxGeometry, material2);
+  const sphere = new THREE.Mesh(sphereGeometry, material3);
+
+  plane.rotation.x = -Math.PI * 0.5;
+  box.position.set(1, 1, 0);
+  sphere.position.set(-1, 1, 0);
+
+  scene.add(plane, box, sphere);
+
+  //그림자 설정
+  plane.receiveShadow = true;
+  box.castShadow = true;
+  box.receiveShadow = true;
+  sphere.castShadow = true;
+  sphere.receiveShadow = true;
+
+  // AxesHelper
+  const axesHelper = new THREE.AxesHelper(3);
+  scene.add(axesHelper);
+
+  // Dat GUI
+  const gui = new dat.GUI();
+  gui.add(camera.position, "x", -5, 5, 0.1).name("카메라 X");
+  gui.add(camera.position, "y", -5, 5, 0.1).name("카메라 Y");
+  gui.add(camera.position, "z", 2, 10, 0.1).name("카메라 Z");
+
+  // 그리기
+  const clock = new THREE.Clock();
+
+  function draw() {
+    const delta = clock.getDelta();
+
+    renderer.render(scene, camera);
+    renderer.setAnimationLoop(draw);
+  }
+
+  function setSize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.render(scene, camera);
+  }
+
+  // 이벤트
+  window.addEventListener("resize", setSize);
+
+  draw();
+}
